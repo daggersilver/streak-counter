@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const secondsLabel = document.getElementById("seconds");
     const resetBtn = document.getElementById("reset-btn");
 
-    const API_URL = "http://localhost:3000/api";
+    const API_URL = "https://tranquil-anchorage-05707.herokuapp.com/api";
 
     if(!localStorage.getItem("streak-counter-data")) {
         fetch(API_URL)
