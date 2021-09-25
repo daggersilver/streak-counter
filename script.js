@@ -5,21 +5,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const minutesLabel = document.getElementById("minutes");
     const secondsLabel = document.getElementById("seconds");
     const resetBtn = document.getElementById("reset-btn");
+    const refreshBtn = document.getElementById("refresh");
 
     const API_URL = "https://tranquil-anchorage-05707.herokuapp.com/api";
+    let authDetails = localStorage.getItem("auth-details");
+
+    if(!authDetails) {
+        setAuth();
+    }
 
     if(!localStorage.getItem("streak-counter-data")) {
         fetch(API_URL)
         .then((rawData) => rawData.json())
         .then((data) => { 
             if(data === null) {
-                fetch(API_URL, {method: "POST"})
+                fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        Authorization: "Basic " + authDetails
+                    }
+                })
                 .then((resp) => resp.json())
                 .then((data) => {
                     localStorage.setItem("streak-counter-data", JSON.stringify(data));
                     addClock(data.time);
                 })
-                .catch(err => {renderError("Server Error, refresh or please try later")});
+                .catch(err => {
+                    renderError("Server Error, refresh or please try later");
+                    setAuth();
+                });
             }
             else {
                 localStorage.setItem("streak-counter-data", JSON.stringify(data));
@@ -39,10 +53,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if(!confirmDelete) 
             return;
 
-        fetch(API_URL, {method: "DELETE"})
+        fetch(API_URL, {
+            method: "DELETE",
+            headers: {
+                Authorization: "Basic " + authDetails
+            }
+        })
         .then(() => {
             localStorage.removeItem("streak-counter-data");
-            window.location = "/";
+            window.location = "/streak-counter";
+        })
+        .catch(err => {
+            renderError("Server Error, refresh or please try later");
+            setAuth();
+        });
+    })
+
+    refreshBtn.addEventListener("click", () => {
+        fetch(API_URL)
+        .then((rawData) => rawData.json())
+        .then((data) => {
+            if(data){
+                localStorage.setItem("streak-counter-data", JSON.stringify(data));
+                addClock(data.time);
+            }
         })
     })
 
@@ -79,6 +113,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
     function renderError(err) {
         alert(err);
+    }
+
+    function setAuth() {
+        let data = prompt("Enter username:password");
+        authDetails = btoa(data);
+        localStorage.setItem("auth-details", authDetails);
     }
 });
 
